@@ -22,14 +22,9 @@ namespace API.Tests
                 services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
                 services.RemoveAll<ApplicationDbContext>();
 
+                // Use a stable in-memory database name so the same store is used across requests
                 services.AddDbContext<ApplicationDbContext>(options =>
-                    options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}"));
-
-                // Seed test data
-                var sp = services.BuildServiceProvider();
-                using var scope = sp.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                db.Database.EnsureCreated();
+                    options.UseInMemoryDatabase("TestDb"));
             });
 
             builder.UseEnvironment("Testing");

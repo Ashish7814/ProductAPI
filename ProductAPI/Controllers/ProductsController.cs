@@ -12,6 +12,7 @@ namespace ProductAPI.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _productService;

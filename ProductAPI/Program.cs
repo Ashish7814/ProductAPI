@@ -100,9 +100,14 @@ app.Use(async (context, next) =>
 });
 app.UseHttpsRedirection();
 
+// Ensure authentication middleware runs before authorization so JWT tokens are validated
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Simple health endpoint used by integration tests
+app.MapGet("/api/v1/health", () => Results.Ok(new { status = "Healthy" }));
 
 app.Run();
 
