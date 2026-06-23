@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  # SQL Server for the API
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: productapi-sqlserver
+    environment:
+      SA_PASSWORD: "YourStrong@Passw0rd"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourStrong@Passw0rd' -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - productapi-network
+
+  # Product API
+  api:
+    build:
+      context: ./ProductAPI
+      dockerfile: Dockerfile
+    container_name: productapi-app
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ProductApiDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
+      JwtSettings__SecretKey: "YourSuperSecretKeyThatIsAtLeast32CharactersLong!"
+      JwtSettings__Issuer: "ProductAPI"
+      JwtSettings__Audience: "ProductAPIUsers"
+      JwtSettings__ExpiryMinutes: "15"
+    volumes:
+      - api_logs:/app/logs
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - productapi-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  api_logs:
+
+networks:
+  productapi-network:
+    driver: bridge
+
